@@ -1,9 +1,15 @@
-# Usa Python 3.11 come base
-FROM python:3.11-slim-bullseye
+# Usa una versione di Linux più recente e stabile (Bookworm)
+FROM python:3.11-slim-bookworm
 
-# Installa le librerie geografiche essenziali per PostGIS
+# Evita che il server si blocchi chiedendo conferme (S/N)
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Installa le librerie spaziali essenziali per GeoDjango
 RUN apt-get update && apt-get install -y \
-    binutils libproj-dev gdal-bin python3-gdal \
+    binutils \
+    libproj-dev \
+    gdal-bin \
+    libgdal-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Imposta la cartella di lavoro
@@ -13,8 +19,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia tutto il resto del codice
+# Copia il codice
 COPY . .
 
-# Comando per avviare il server sulla porta richiesta da Render
+# Comando di avvio
 CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:10000"]
