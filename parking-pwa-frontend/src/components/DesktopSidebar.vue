@@ -10,13 +10,14 @@ const props = defineProps({
   }
 })
 
-// Dichiariamo l'evento per dire ad App.vue di chiudere il pannello
 const emit = defineEmits(['close-sheet'])
 
 const store = useAppStore()
-const { user, parkingSpots, mySubmissions } = storeToRefs(store)
+// CORRETTO: Estraiamo tutti i dati necessari una sola volta
+const { user, parkingSpots, mySubmissions, filters, filteredSpots } = storeToRefs(store)
 
 const currentView = ref('home')
+const searchQuery = ref('') // Aggiunto qui
 
 const openMySubmissions = () => {
   store.fetchMySubmissions()
@@ -30,7 +31,6 @@ const goHome = () => {
 const focusSpot = (spot) => {
   store.center = [spot.geometry.coordinates[1], spot.geometry.coordinates[0]]
   store.zoom = 17 
-  // CHIUSURA AUTOMATICA: Lanciamo l'evento quando si clicca un posteggio
   emit('close-sheet')
 }
 </script>
@@ -38,7 +38,7 @@ const focusSpot = (spot) => {
 <template>
   <aside class="desktop-sidebar">
     
-    <!-- PULSANTE CHIUSURA (Visibile SOLO su Mobile) -->
+    <!-- PULSANTE CHIUSURA -->
     <div class="mobile-close-bar">
       <button class="icon-btn" @click="$emit('close-sheet')">✖</button>
     </div>
@@ -66,7 +66,7 @@ const focusSpot = (spot) => {
       </div>
     </div>
 
-    <!-- VISTA: HOMEPAGE (Divisa dinamicamente) -->
+    <!-- VISTA: HOMEPAGE -->
     <div v-else class="sidebar-view">
       
       <!-- TITOLO -->
@@ -75,7 +75,7 @@ const focusSpot = (spot) => {
         <p class="text-sm">Mappa collaborativa per posteggi accessibili.</p>
       </div>
       
-      <!-- PROFILO UTENTE LOGGATO -->
+      <!-- PROFILO -->
       <div v-if="user && (activeTab === 'all' || activeTab === 'profile')" class="profile-card">
         <p class="profile-email">👤 {{ user.email }}</p>
         <button class="btn-secondary full-width" @click="openMySubmissions">
@@ -83,22 +83,41 @@ const focusSpot = (spot) => {
         </button>
       </div>
       
-      <!-- Avviso Utente NON Loggato -->
       <div v-else-if="!user && activeTab === 'profile'" class="profile-card">
         <p class="text-sm" style="text-align: center; margin: 0;">Devi accedere per vedere il tuo profilo.</p>
       </div>
       
       <hr class="divider" v-if="activeTab === 'all'">
+
+      <!-- RICERCA E FILTRI -->
+      <div class="controls-section" v-if="activeTab === 'all' || activeTab === 'list'">
+        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+          <input v-model="searchQuery" class="form-input" style="margin-bottom: 0;" placeholder="Cerca via o città..." @keyup.enter="store.searchAddress(searchQuery)">
+          <button class="btn-primary" style="width: auto;" @click="store.searchAddress(searchQuery)">🔍</button>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
+          <select v-model="filters.status" class="form-input" style="margin-bottom: 0; flex: 1;">
+            <option value="all">Tutti gli stati</option>
+            <option value="approved">Solo Approvati</option>
+            <option value="pending">In Attesa</option>
+          </select>
+
+          <label style="font-size: 13px; display: flex; align-items: center; gap: 5px;">
+            <input type="checkbox" v-model="filters.radius1km"> Entro 1km
+          </label>
+        </div>
+      </div>
       
-      <!-- LISTA POSTEGGI -->
+      <!-- LISTA POSTEGGI (Ora usa filteredSpots) -->
       <div class="spots-section" v-if="activeTab === 'all' || activeTab === 'list'">
         <div class="view-header" style="margin-bottom: 10px;">
           <h3 style="margin: 0; color: #1f2937;">Posteggi Disponibili</h3>
         </div>
-        <p v-if="parkingSpots.length === 0" class="text-sm">Nessun posteggio trovato sulla mappa.</p>
+        <p v-if="filteredSpots.length === 0" class="text-sm">Nessun posteggio trovato sulla mappa.</p>
         
         <div class="spot-list">
-          <div v-for="spot in parkingSpots" :key="spot.id" class="spot-list-item" @click="focusSpot(spot)">
+          <div v-for="spot in filteredSpots" :key="spot.id" class="spot-list-item" @click="focusSpot(spot)">
             <strong>📍 {{ spot.properties.description ? (spot.properties.description.length > 30 ? spot.properties.description.substring(0, 30) + '...' : spot.properties.description) : 'Posteggio segnalato' }}</strong>
             <br>
             <span class="text-xs">Aggiunto il: {{ new Date(spot.properties.created_at).toLocaleDateString() }}</span>
@@ -113,17 +132,8 @@ const focusSpot = (spot) => {
 <style scoped>
 .desktop-sidebar { width: 380px; flex-shrink: 0; background: #ffffff; z-index: 10; display: flex; flex-direction: column; }
 @media (max-width: 768px) { .desktop-sidebar { display: none; } }
-
-/* Nuovo stile per la barra di chiusura su mobile */
 .mobile-close-bar { display: none; }
-@media (max-width: 768px) {
-  .mobile-close-bar {
-    display: flex;
-    justify-content: flex-end;
-    padding: 15px 25px 0 25px; /* Spazio per la X in alto a destra */
-  }
-}
-
+@media (max-width: 768px) { .mobile-close-bar { display: flex; justify-content: flex-end; padding: 15px 25px 0 25px; } }
 .sidebar-view { padding: 15px 25px 25px 25px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; overflow-y: auto;}
 .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .view-header h2 { margin: 0; font-size: 20px; color: #1f2937; }
@@ -149,4 +159,6 @@ const focusSpot = (spot) => {
 .btn-secondary { background: #f3f4f6; color: #374151; padding: 8px; font-size: 13px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; text-align: center; transition: opacity 0.2s; }
 .full-width { width: 100%; }
 .empty-msg { text-align: center; margin-top: 20px; }
+.form-input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-family: inherit;}
+.btn-primary { padding: 12px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; background: #2563eb; color: white;}
 </style>
