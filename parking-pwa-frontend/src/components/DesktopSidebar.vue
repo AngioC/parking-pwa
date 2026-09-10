@@ -3,13 +3,15 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '../store'
 
-// Riceviamo da App.vue l'informazione su cosa mostrare ('all', 'list', o 'profile')
 const props = defineProps({
   activeTab: {
     type: String,
     default: 'all' 
   }
 })
+
+// Dichiariamo l'evento per dire ad App.vue di chiudere il pannello
+const emit = defineEmits(['close-sheet'])
 
 const store = useAppStore()
 const { user, parkingSpots, mySubmissions } = storeToRefs(store)
@@ -28,12 +30,19 @@ const goHome = () => {
 const focusSpot = (spot) => {
   store.center = [spot.geometry.coordinates[1], spot.geometry.coordinates[0]]
   store.zoom = 17 
+  // CHIUSURA AUTOMATICA: Lanciamo l'evento quando si clicca un posteggio
+  emit('close-sheet')
 }
 </script>
 
 <template>
   <aside class="desktop-sidebar">
     
+    <!-- PULSANTE CHIUSURA (Visibile SOLO su Mobile) -->
+    <div class="mobile-close-bar">
+      <button class="icon-btn" @click="$emit('close-sheet')">✖</button>
+    </div>
+
     <!-- VISTA: LE MIE SEGNALAZIONI -->
     <div v-if="currentView === 'submissions'" class="sidebar-view">
       <div class="view-header">
@@ -60,13 +69,13 @@ const focusSpot = (spot) => {
     <!-- VISTA: HOMEPAGE (Divisa dinamicamente) -->
     <div v-else class="sidebar-view">
       
-      <!-- TITOLO (Visibile su PC o nella tab Lista su Mobile) -->
+      <!-- TITOLO -->
       <div class="brand" v-if="activeTab === 'all' || activeTab === 'list'">
         <h1>🅿️ ParkDisabili</h1>
         <p class="text-sm">Mappa collaborativa per posteggi accessibili.</p>
       </div>
       
-      <!-- PROFILO UTENTE LOGGATO (Visibile su PC o nella tab Profilo su Mobile) -->
+      <!-- PROFILO UTENTE LOGGATO -->
       <div v-if="user && (activeTab === 'all' || activeTab === 'profile')" class="profile-card">
         <p class="profile-email">👤 {{ user.email }}</p>
         <button class="btn-secondary full-width" @click="openMySubmissions">
@@ -74,14 +83,14 @@ const focusSpot = (spot) => {
         </button>
       </div>
       
-      <!-- Avviso se l'utente clicca Profilo su mobile ma non è loggato -->
+      <!-- Avviso Utente NON Loggato -->
       <div v-else-if="!user && activeTab === 'profile'" class="profile-card">
         <p class="text-sm" style="text-align: center; margin: 0;">Devi accedere per vedere il tuo profilo.</p>
       </div>
       
       <hr class="divider" v-if="activeTab === 'all'">
       
-      <!-- LISTA POSTEGGI (Visibile su PC o nella tab Lista su Mobile) -->
+      <!-- LISTA POSTEGGI -->
       <div class="spots-section" v-if="activeTab === 'all' || activeTab === 'list'">
         <div class="view-header" style="margin-bottom: 10px;">
           <h3 style="margin: 0; color: #1f2937;">Posteggi Disponibili</h3>
@@ -102,10 +111,20 @@ const focusSpot = (spot) => {
 </template>
 
 <style scoped>
-/* Il CSS rimane invariato */
-.desktop-sidebar { width: 380px; flex-shrink: 0; background: #ffffff; z-index: 10; box-shadow: 4px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+.desktop-sidebar { width: 380px; flex-shrink: 0; background: #ffffff; z-index: 10; display: flex; flex-direction: column; }
 @media (max-width: 768px) { .desktop-sidebar { display: none; } }
-.sidebar-view { padding: 25px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; overflow-y: auto;}
+
+/* Nuovo stile per la barra di chiusura su mobile */
+.mobile-close-bar { display: none; }
+@media (max-width: 768px) {
+  .mobile-close-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 25px 0 25px; /* Spazio per la X in alto a destra */
+  }
+}
+
+.sidebar-view { padding: 15px 25px 25px 25px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; overflow-y: auto;}
 .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .view-header h2 { margin: 0; font-size: 20px; color: #1f2937; }
 .text-sm { font-size: 14px; color: #6b7280; line-height: 1.5; margin-bottom: 15px;}

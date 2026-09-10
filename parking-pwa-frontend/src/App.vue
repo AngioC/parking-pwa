@@ -61,7 +61,11 @@ onMounted(() => {
       />
       
       <!-- Altrimenti, mostriamo la lista e il profilo (DesktopSidebar) -->
-      <DesktopSidebar v-else :active-tab="mobileActiveTab === 'map' ? 'all' : mobileActiveTab" />
+      <DesktopSidebar 
+        v-else 
+        :active-tab="mobileActiveTab === 'map' ? 'all' : mobileActiveTab" 
+        @close-sheet="mobileActiveTab = 'map'" 
+      />
 
     </div>
 
