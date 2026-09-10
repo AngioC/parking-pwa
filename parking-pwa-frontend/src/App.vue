@@ -28,8 +28,8 @@ const markerRefs = ref({})
 
 // STATI DELLA BARRA LATERALE E MODALI
 const showForm = ref(false)    
-const showMySubmissions = ref(false) // Nuovo stato per la vista segnalazioni
-const mySubmissions = ref([])        // Dati delle segnalazioni dell'utente
+const showMySubmissions = ref(false)
+const mySubmissions = ref([])        
 
 const draftPosition = ref(null) 
 const showLoginModal = ref(false)
@@ -43,7 +43,10 @@ const user = ref(null)
 const email = ref('')
 const password = ref('')
 
-// Configura Axios
+// --- CONFIGURA AXIOS ---
+// Usa la variabile d'ambiente per l'URL del backend (fallback a localhost per sicurezza)
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem('supabase_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
@@ -53,16 +56,17 @@ axios.interceptors.request.use((config) => {
 // --- METODI MAPPA E DATI ---
 const fetchSpots = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/spots/')
+    // Rimosso localhost, usa l'URL base configurato sopra
+    const response = await axios.get('/api/spots/')
     parkingSpots.value = response.data.features
   } catch (error) { console.error("Errore GET:", error) }
 }
 
-// Funzione per recuperare le proprie segnalazioni
 const fetchMySubmissions = async () => {
   if (!user.value) return
   try {
-    const response = await axios.get('http://localhost:8000/api/submissions/')
+    // Rimosso localhost
+    const response = await axios.get('/api/submissions/')
     mySubmissions.value = response.data.features
     showMySubmissions.value = true
     showForm.value = false
@@ -129,7 +133,8 @@ const submitReport = async () => {
   if (newReport.value.imageFile) formData.append('photo', newReport.value.imageFile)
 
   try {
-    await axios.post('http://localhost:8000/api/submissions/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    // Rimosso localhost
+    await axios.post('/api/submissions/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
     alert("Segnalazione inviata con successo!")
     closeForm()
   } catch (error) {
@@ -327,7 +332,6 @@ onMounted(() => {
 </template>
 
 <style>
-/* CSS RIMASTO INVARIATO, HO AGGIUNTO SOLO I BADGE DI STATO */
 body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
 .app-layout { display: flex; height: 100vh; width: 100vw; flex-direction: row; }
 .sidebar { width: 380px; flex-shrink: 0; background: #ffffff; z-index: 10; box-shadow: 4px 0 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
@@ -370,8 +374,6 @@ body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, 
 .full-width { width: 100%; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .modal-card { background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-
-/* STATI SEGNALAZIONE */
 .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; letter-spacing: 0.5px; }
 .status-badge.pending { background: #fef08a; color: #854d0e; }
 .status-badge.approved { background: #bbf7d0; color: #166534; }
