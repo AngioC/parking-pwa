@@ -1,5 +1,9 @@
 import { createApp } from 'vue'
-//import './style.css'
+import { createPinia } from 'pinia' // Aggiungi questa riga
 import App from './App.vue'
 
-createApp(App).mount('#app')
+const app = createApp(App)
+const pinia = createPinia() // Crea l'istanza di Pinia
+
+app.use(pinia) // Collega Pinia all'app
+app.mount('#app')

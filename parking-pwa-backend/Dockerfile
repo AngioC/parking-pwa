@@ -22,5 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia il codice
 COPY . .
 
+RUN python manage.py collectstatic --noinput
+
 # Comando di avvio
 CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:10000"]
