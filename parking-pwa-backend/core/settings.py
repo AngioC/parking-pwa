@@ -117,9 +117,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Sicurezza e CORS
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # La porta di default di Vite/Vue
-]
+cors_env = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173')
+
+# Converte la stringa in una lista separando gli indirizzi alla virgola
+CORS_ALLOWED_ORIGINS = cors_env.split(',')
 
 
 # --- CLOUD STORAGE (SUPABASE S3) ---
