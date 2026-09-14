@@ -68,12 +68,15 @@ const submitReport = async () => {
   <div class="submission-form">
     <div class="view-header">
       <h2>Nuova Segnalazione</h2>
-      <button class="icon-btn" @click="closeForm">✖</button>
+      <button class="icon-btn" @click="closeForm">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
     <p class="text-sm">Hai inserito un pin sulla mappa. Compila i dati per inviare.</p>
     
     <label class="upload-area">
-      📸 Scatta o Carica Foto
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+      <br>Scatta o Carica Foto
       <input type="file" accept="image/*" capture="environment" @change="handleFileUpload" hidden>
     </label>
     <img v-if="imagePreview" :src="imagePreview" class="preview-img">
