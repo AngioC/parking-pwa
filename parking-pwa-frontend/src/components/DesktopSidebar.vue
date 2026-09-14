@@ -11,7 +11,6 @@ const store = useAppStore()
 const { user, parkingSpots, mySubmissions, filters, filteredSpots } = storeToRefs(store)
 
 const currentView = ref('home')
-const searchQuery = ref('') 
 
 // IL FIX DEL MENU: Se l'utente clicca una tab nell'Header/Footer, forziamo la barra a tornare alla vista principale
 watch(() => props.activeTab, () => {
@@ -88,26 +87,6 @@ const focusSpot = (spot) => {
       </div>
       
       <hr class="divider" v-if="activeTab === 'all'">
-
-      <div class="controls-section" v-if="activeTab === 'all' || activeTab === 'list'">
-        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-          <input v-model="searchQuery" class="form-input" style="margin-bottom: 0;" placeholder="Cerca via o città..." @keyup.enter="store.searchAddress(searchQuery)">
-          <button class="btn-primary" style="width: auto; padding: 0 15px;" @click="store.searchAddress(searchQuery)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </button>
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
-          <select v-model="filters.status" class="form-input" style="margin-bottom: 0; flex: 1;">
-            <option value="all">Tutti gli stati</option>
-            <option value="approved">Solo Approvati</option>
-            <option value="pending">In Attesa</option>
-          </select>
-          <label style="font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 5px; color: #4b5563;">
-            <input type="checkbox" v-model="filters.radius1km"> Entro 1km
-          </label>
-        </div>
-      </div>
       
       <div class="spots-section" v-if="activeTab === 'all' || activeTab === 'list'">
         <div class="view-header" style="margin-bottom: 10px;">
