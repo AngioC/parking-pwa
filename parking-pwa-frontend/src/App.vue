@@ -31,6 +31,24 @@ const handleLogout = async () => {
   mobileActiveTab.value = 'map'
 }
 
+// NUOVA FUNZIONE: Resetta l'app allo stato iniziale "Mappa Piena"
+const resetToExplore = () => {
+  mobileActiveTab.value = 'map'       // Torna alla scheda mappa
+  store.draftPosition = null          // Elimina il pin rosso e chiude il form
+  store.center = [41.90, 12.49]       // Ricentra la mappa sull'Italia
+  store.zoom = 6                      // Ripristina lo zoom iniziale
+}
+
+// Assicuriamoci che anche da mobile succeda la stessa cosa cliccando "Esplora"
+const handleMobileTabChange = (tab) => {
+  mobileActiveTab.value = tab
+  if (tab === 'map') {
+    store.draftPosition = null
+    store.center = [41.90, 12.49]
+    store.zoom = 6
+  }
+}
+
 onMounted(() => {
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (session) { 
@@ -45,14 +63,13 @@ onMounted(() => {
 <template>
   <div class="app-container">
     <header class="app-header">
-      <!-- Logo modernizzato senza emoji -->
       <div class="logo">
-        <!-- Assicurati che l'estensione sia corretta (.png, .svg, .jpg) -->
         <img src="/logo.png" alt="Logo ParkAbile" class="logo-img" />
         ParkAbile
       </div>
       <nav class="header-nav">
-        <a href="#" class="nav-link hide-mobile" @click.prevent="mobileActiveTab = 'map'">Esplora</a>
+        <!-- Ora il tasto chiama la nuova funzione "resetToExplore" -->
+        <a href="#" class="nav-link hide-mobile" @click.prevent="resetToExplore">Esplora</a>
         <a href="#" class="nav-link hide-mobile" v-if="user" @click.prevent="mobileActiveTab = 'profile'">Profilo</a>
         <a href="#" class="nav-link hide-mobile" @click.prevent>Contattaci</a>
 
@@ -80,7 +97,8 @@ onMounted(() => {
       </div>
     </div>
 
-    <MobileBottomNav @change-tab="(tab) => mobileActiveTab = tab" />
+    <!-- Collegata la funzione anche alla barra in basso (Mobile) -->
+    <MobileBottomNav @change-tab="handleMobileTabChange" />
     <AuthModals v-if="showAuthModal" @close="showAuthModal = false" />
   </div>
 </template>
