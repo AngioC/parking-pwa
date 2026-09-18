@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+// Aggiunto onUnmounted per spegnere il GPS quando si chiude l'app
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '../store'
 import "leaflet/dist/leaflet.css"
@@ -17,6 +18,10 @@ let map = null
 let clusterGroup = null
 let draftMarker = null
 
+// Nuove variabili per il tracciamento in tempo reale
+let userLocationMarker = null
+let watchId = null
+
 const cdnIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -30,16 +35,52 @@ const draftIcon = L.icon({
   iconSize: [25, 41], iconAnchor: [12, 41], shadowSize: [41, 41], popupAnchor: [1, -34]
 })
 
+// Icona speciale creata via CSS per il pallino blu animato
+const blueDotIcon = L.divIcon({
+  className: 'pulsing-blue-dot',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8]
+})
+
 onMounted(() => {
   map = L.map(mapContainer.value).setView(center.value, zoom.value)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map)
+  
   map.on('click', (event) => {
     const { lat, lng } = event.latlng
     store.setDraftPosition(lat, lng)
   })
+  
   clusterGroup = L.markerClusterGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 18 })
   map.addLayer(clusterGroup)
   renderClusters()
+
+  // ATTIVIAMO IL PALLINO BLU (Live Tracking GPS)
+  if (navigator.geolocation) {
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const lat = pos.coords.latitude
+        const lng = pos.coords.longitude
+        
+        if (!userLocationMarker) {
+          // Crea il pallino se non esiste
+          userLocationMarker = L.marker([lat, lng], { icon: blueDotIcon }).addTo(map)
+        } else {
+          // Sposta il pallino se esiste già
+          userLocationMarker.setLatLng([lat, lng])
+        }
+      },
+      (err) => console.warn("Errore GPS o permessi negati per il pallino blu:", err),
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+    )
+  }
+})
+
+// Spegniamo il GPS quando cambiamo pagina per non consumare batteria
+onUnmounted(() => {
+  if (watchId !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(watchId)
+  }
 })
 
 watch(filteredSpots, () => { renderClusters() }, { deep: true })
@@ -87,15 +128,32 @@ const renderClusters = () => {
   if (markersArray.length > 0) clusterGroup.addLayers(markersArray) 
 }
 
+// IL TUO BOTTONE ORIGINALE (Intatto: centra la mappa E posiziona il pin rosso)
 const geolocateAndReport = () => {
+  // 1. SOLUZIONE ISTANTANEA: Se abbiamo già il pallino blu, rubiamo le sue coordinate!
+  if (userLocationMarker) {
+    const { lat, lng } = userLocationMarker.getLatLng()
+    store.setDraftPosition(lat, lng)
+    store.center = [lat, lng]
+    store.zoom = 17
+    return
+  }
+
+  // 2. FALLBACK: Se il pallino blu non si è ancora attivato, interroghiamo il sensore
   if (!navigator.geolocation) return alert("GPS non supportato.")
+  
   navigator.geolocation.getCurrentPosition(
     (position) => {
       store.setDraftPosition(position.coords.latitude, position.coords.longitude)
       store.center = [position.coords.latitude, position.coords.longitude]
-      store.zoom = 16
+      store.zoom = 17
     },
-    () => alert("Impossibile ottenere la posizione.")
+    (error) => {
+      console.warn("Errore GPS:", error)
+      alert("Impossibile ottenere la posizione. Verifica di aver attivato il GPS.")
+    },
+    // Aggiungiamo un timeout: se il telefono si blocca per più di 10 secondi, lancia l'errore (evita che il tasto muoia in silenzio)
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   )
 }
 const getDirections = (spot) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${spot.geometry.coordinates[1]},${spot.geometry.coordinates[0]}`, '_blank') }
@@ -115,7 +173,6 @@ const getDirections = (spot) => { window.open(`https://www.google.com/maps/dir/?
 .map-wrapper { height: 100%; width: 100%; position: relative; z-index: 1; }
 .pure-leaflet-map { height: 100%; width: 100%; z-index: 1; }
 
-/* Stile Desktop del pulsante */
 .fab { 
   position: absolute; 
   bottom: 30px; 
@@ -125,9 +182,9 @@ const getDirections = (spot) => { window.open(`https://www.google.com/maps/dir/?
   background: #1f2937; 
   color: white; 
   border: none; 
-  padding: 10px 18px; /* Padding ridotto per renderlo più piccolo */
-  border-radius: 20px; /* Bordo un po' meno arrotondato */
-  font-size: 13px; /* Testo più piccolo */
+  padding: 10px 18px; 
+  border-radius: 20px; 
+  font-size: 13px; 
   font-weight: 600; 
   box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
   cursor: pointer; 
@@ -138,16 +195,38 @@ const getDirections = (spot) => { window.open(`https://www.google.com/maps/dir/?
 .fab:active { transform: translateX(-50%) scale(0.95); }
 .fab:hover { background: #000000; }
 
-/* Stile Mobile: Alza il pulsante sopra la barra di navigazione inferiore */
 @media (max-width: 768px) {
   .fab {
-    /* La bottom nav è alta ~70px, più la safe-area, quindi alziamo il bottone a 90px */
     bottom: calc(90px + env(safe-area-inset-bottom)); 
   }
 }
 </style>
 
 <style>
+/* STILI DEL PALLINO BLU */
+.pulsing-blue-dot {
+  background-color: #2563eb;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0,0,0,0.4);
+  position: relative;
+}
+.pulsing-blue-dot::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.4);
+  animation: pulse-animation 2s infinite ease-out;
+}
+@keyframes pulse-animation {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
 .popup-content { text-align: left; font-family: inherit;}
 .popup-title { margin: 0 0 12px 0; font-size: 16px; color: #1f2937; font-weight: 700; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;}
 .popup-text { margin: 6px 0; font-size: 14px; color: #374151; line-height: 1.4;}
