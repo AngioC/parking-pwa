@@ -203,12 +203,12 @@ const getDirections = (spot) => { window.open(`https://www.google.com/maps/dir/?
 </style>
 
 <style>
-/* STILI DEL PALLINO BLU */
+/* STILI DEL PALLINO BLU (Ora Indaco) */
 .pulsing-blue-dot {
-  background-color: #2563eb;
+  background-color: #4f46e5;
   border: 3px solid #ffffff;
   border-radius: 50%;
-  box-shadow: 0 0 4px rgba(0,0,0,0.4);
+  box-shadow: 0 0 6px rgba(0,0,0,0.3);
   position: relative;
 }
 .pulsing-blue-dot::after {
@@ -219,7 +219,7 @@ const getDirections = (spot) => { window.open(`https://www.google.com/maps/dir/?
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: rgba(37, 99, 235, 0.4);
+  background: rgba(79, 70, 229, 0.4);
   animation: pulse-animation 2s infinite ease-out;
 }
 @keyframes pulse-animation {
@@ -228,12 +228,12 @@ const getDirections = (spot) => { window.open(`https://www.google.com/maps/dir/?
 }
 
 .popup-content { text-align: left; font-family: inherit;}
-.popup-title { margin: 0 0 12px 0; font-size: 16px; color: #1f2937; font-weight: 700; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;}
-.popup-text { margin: 6px 0; font-size: 14px; color: #374151; line-height: 1.4;}
-.info-label { font-size: 12px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px;}
-.popup-image { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e5e7eb; }
-.popup-btn { margin-top: 12px; padding: 10px; font-size: 14px; border-radius: 8px; background: #2563eb; color: white; border: none; cursor: pointer; font-weight: 600; transition: background 0.2s;}
-.popup-btn:hover { background: #1d4ed8; }
+.popup-title { margin: 0 0 12px 0; font-size: 16px; color: #0f172a; font-weight: 800; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;}
+.popup-text { margin: 6px 0; font-size: 14px; color: #475569; line-height: 1.4;}
+.info-label { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px;}
+.popup-image { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
+.popup-btn { margin-top: 12px; padding: 12px; font-size: 14px; border-radius: 8px; background: #4f46e5; color: white; border: none; cursor: pointer; font-weight: 600; transition: background 0.2s;}
+.popup-btn:hover { background: #4338ca; }
 .full-width { width: 100%; }
 .leaflet-popup-content { width: 260px !important; max-width: 100%; }
 </style>

@@ -31,15 +31,13 @@ const handleLogout = async () => {
   mobileActiveTab.value = 'map'
 }
 
-// NUOVA FUNZIONE: Resetta l'app allo stato iniziale "Mappa Piena"
 const resetToExplore = () => {
-  mobileActiveTab.value = 'map'       // Torna alla scheda mappa
-  store.draftPosition = null          // Elimina il pin rosso e chiude il form
-  store.center = [41.90, 12.49]       // Ricentra la mappa sull'Italia
-  store.zoom = 6                      // Ripristina lo zoom iniziale
+  mobileActiveTab.value = 'map'       
+  store.draftPosition = null          
+  store.center = [41.90, 12.49]       
+  store.zoom = 6                      
 }
 
-// Assicuriamoci che anche da mobile succeda la stessa cosa cliccando "Esplora"
 const handleMobileTabChange = (tab) => {
   mobileActiveTab.value = tab
   if (tab === 'map') {
@@ -68,13 +66,13 @@ onMounted(() => {
         ParkAbile
       </div>
       <nav class="header-nav">
-        <!-- Ora il tasto chiama la nuova funzione "resetToExplore" -->
-        <a href="#" class="nav-link hide-mobile" @click.prevent="resetToExplore">Esplora</a>
-        <a href="#" class="nav-link hide-mobile" v-if="user" @click.prevent="mobileActiveTab = 'profile'">Profilo</a>
-        <a href="#" class="nav-link hide-mobile" @click.prevent>Contattaci</a>
+        <a href="#" class="nav-link hide-mobile" :class="{ 'active-link': mobileActiveTab === 'map' }" @click.prevent="resetToExplore">Esplora</a>
+        <a href="#" class="nav-link hide-mobile" :class="{ 'active-link': mobileActiveTab === 'about' }" @click.prevent="mobileActiveTab = 'about'">Chi siamo</a>
+        <a href="#" class="nav-link hide-mobile" :class="{ 'active-link': mobileActiveTab === 'contact' }" @click.prevent="mobileActiveTab = 'contact'">Contattaci</a>
+        <a href="#" class="nav-link hide-mobile" :class="{ 'active-link': mobileActiveTab === 'profile' }" v-if="user" @click.prevent="mobileActiveTab = 'profile'">Profilo</a>
 
+        <!-- Il tasto logout è sparito da qui, rimane solo Accedi -->
         <button v-if="!user" class="btn-login" @click="showAuthModal = true">Accedi</button>
-        <button v-else class="btn-logout" @click="handleLogout">Logout</button>
       </nav>
     </header>
 
@@ -92,48 +90,55 @@ onMounted(() => {
         <DesktopSidebar 
           v-else 
           :active-tab="mobileActiveTab === 'map' ? 'all' : mobileActiveTab" 
-          @close-sheet="mobileActiveTab = 'map'" 
+          @close-sheet="mobileActiveTab = 'map'"
+          @logout="handleLogout"
         />
       </div>
     </div>
 
-    <!-- Collegata la funzione anche alla barra in basso (Mobile) -->
     <MobileBottomNav @change-tab="handleMobileTabChange" />
     <AuthModals v-if="showAuthModal" @close="showAuthModal = false" />
   </div>
 </template>
 
 <style>
-body { margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #f3f4f6;}
+/* PALETTE MODERNA: Indaco e Ardesia */
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg-color: #f8fafc;
+  --surface: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-light: #e2e8f0;
+}
+
+body { margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; overflow: hidden; background: var(--bg-color); color: var(--text-main);}
 .app-container { display: flex; height: 100vh; width: 100vw; flex-direction: column; }
 
-.app-header { display: flex; justify-content: space-between; align-items: center; padding: 0 25px; height: 65px; background: #ffffff; border-bottom: 1px solid #e5e7eb; z-index: 2000; flex-shrink: 0; }
-.logo { display: flex; align-items: center; font-size: 20px; font-weight: 800; color: #1f2937; letter-spacing: -0.5px;}
-.logo-img { 
-  height: 55px; /* Regola questo valore per fare il logo più grande o più piccolo */
-  width: auto; 
-  margin-right: 12px; 
-  border-radius: 4px; /* Rimuovilo se il tuo logo ha già la forma che desideri */
-}
-.header-nav { display: flex; align-items: center; gap: 24px; }
-.nav-link { text-decoration: none; color: #4b5563; font-weight: 500; font-size: 15px; transition: color 0.2s; }
-.nav-link:hover { color: #2563eb; }
-.btn-login { background: #2563eb; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s;}
-.btn-login:hover { background: #1d4ed8; }
-.btn-logout { background: #ffffff; color: #dc2626; border: 1px solid #fca5a5; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;}
-.btn-logout:hover { background: #fef2f2; }
+.app-header { display: flex; justify-content: space-between; align-items: center; padding: 0 25px; height: 70px; background: var(--surface); border-bottom: 1px solid var(--border-light); z-index: 2000; flex-shrink: 0; }
+.logo { display: flex; align-items: center; font-size: 22px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px;}
+.logo-img { height: 50px; width: auto; margin-right: 12px; border-radius: 4px; }
+
+.header-nav { display: flex; align-items: center; gap: 28px; }
+.nav-link { text-decoration: none; color: var(--text-muted); font-weight: 600; font-size: 15px; transition: color 0.2s; padding: 5px 0;}
+.nav-link:hover { color: var(--primary); }
+.active-link { color: var(--primary); border-bottom: 2px solid var(--primary); }
+
+.btn-login { background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s;}
+.btn-login:hover { background: var(--primary-hover); transform: translateY(-1px);}
 
 .app-content { display: flex; flex: 1; overflow: hidden; position: relative; flex-direction: row; }
 .main-map { flex-grow: 1; height: 100%; position: relative; z-index: 1; }
 
-.side-panel { width: 420px; flex-shrink: 0; background: #ffffff; z-index: 10; box-shadow: -4px 0 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+.side-panel { width: 420px; flex-shrink: 0; background: var(--surface); z-index: 10; box-shadow: -4px 0 20px rgba(0,0,0,0.03); display: flex; flex-direction: column; border-left: 1px solid var(--border-light);}
 
 @media (max-width: 768px) {
-  .app-header { padding: 0 15px; }
+  .app-header { padding: 0 15px; height: 65px; }
   .hide-mobile { display: none; }
   .app-content { flex-direction: column; }
   
-  .side-panel { position: fixed; bottom: 70px; left: 0; right: 0; width: 100%; height: 65vh; border-radius: 20px 20px 0 0; transform: translateY(120%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1500; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+  .side-panel { position: fixed; bottom: 70px; left: 0; right: 0; width: 100%; height: 68vh; border-radius: 24px 24px 0 0; transform: translateY(120%); transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 1500; box-shadow: 0 -10px 25px rgba(0,0,0,0.1); border-left: none;}
   .side-panel.mobile-active { transform: translateY(0); }
   .side-panel .desktop-sidebar { display: flex !important; width: 100% !important; box-shadow: none !important; }
 }

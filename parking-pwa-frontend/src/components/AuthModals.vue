@@ -4,43 +4,29 @@ import { supabase } from '../supabase'
 import { useAppStore } from '../store'
 
 const store = useAppStore()
-const emit = defineEmits(['close']) // Avvisa App.vue di chiudere il modale
+const emit = defineEmits(['close']) 
 
 const email = ref('')
 const password = ref('')
-// Variabile per passare da Login a Signup nello stesso popup
 const isLoginMode = ref(true) 
 
 const handleLogin = async () => {
-  const { data, error } = await supabase.auth.signInWithPassword({ 
-    email: email.value, 
-    password: password.value 
-  })
-  
+  const { data, error } = await supabase.auth.signInWithPassword({ email: email.value, password: password.value })
   if (error) return alert("Errore di login: " + error.message)
-  
-  // Salviamo l'utente nello store e il token nel browser
   store.setUser(data.user)
   localStorage.setItem('supabase_token', data.session.access_token)
   emit('close')
 }
 
 const handleSignup = async () => {
-  const { data, error } = await supabase.auth.signUp({ 
-    email: email.value, 
-    password: password.value 
-  })
-  
+  const { data, error } = await supabase.auth.signUp({ email: email.value, password: password.value })
   if (error) return alert("Errore: " + error.message)
-  
   alert("Registrato! Ora puoi accedere.")
-  // Torniamo alla vista di Login
   isLoginMode.value = true
 }
 </script>
 
 <template>
-  <!-- Il .self fa in modo che cliccando fuori dal riquadro bianco, il modale si chiuda -->
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-card">
       <div class="view-header">
@@ -50,10 +36,12 @@ const handleSignup = async () => {
         </button>
       </div>
       
-      <input type="email" v-model="email" class="form-input" placeholder="La tua Email">
-      <input type="password" v-model="password" class="form-input" placeholder="La tua Password (min. 6 caratteri)">
+      <div class="form-group">
+        <input type="email" v-model="email" class="form-input" placeholder="La tua Email">
+        <input type="password" v-model="password" class="form-input" placeholder="La tua Password (min. 6 caratteri)">
+      </div>
       
-      <button class="btn-primary" style="margin-bottom: 15px;" @click="isLoginMode ? handleLogin() : handleSignup()">
+      <button class="btn-primary full-width" style="margin-bottom: 20px;" @click="isLoginMode ? handleLogin() : handleSignup()">
         {{ isLoginMode ? 'Entra' : 'Crea Account' }}
       </button>
       
@@ -67,17 +55,24 @@ const handleSignup = async () => {
 </template>
 
 <style scoped>
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.modal-card { background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-.view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.view-header h2 { margin: 0; font-size: 20px; color: #1f2937; }
-.icon-btn { background: #f3f4f6; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #4b5563; display: flex; justify-content: center; align-items: center; }
-.icon-btn:hover { background: #e5e7eb; }
-.form-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 15px; }
-.btn-primary, .btn-secondary { padding: 12px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; text-align: center; width: 100%; transition: background-color 0.2s; }
-.btn-primary { background: #2563eb; color: white; }
-.btn-primary:hover { background: #1d4ed8; }
-.btn-secondary { background: #f3f4f6; color: #374151; }
-.btn-secondary:hover { background: #e5e7eb; }
-.divider { border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal-card { background: white; padding: 35px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);}
+@keyframes modalIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+.view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.view-header h2 { margin: 0; font-size: 24px; color: #0f172a; font-weight: 800; letter-spacing: -0.5px;}
+.icon-btn { background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; color: #64748b; display: flex; justify-content: center; align-items: center; transition: background 0.2s;}
+.icon-btn:hover { background: #e2e8f0; color: #0f172a;}
+
+.form-group { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;}
+.form-input { width: 100%; padding: 14px 16px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-family: inherit; font-size: 15px; background: #f8fafc; transition: all 0.2s;}
+.form-input:focus { outline: none; border-color: #4f46e5; background: white; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);}
+
+.btn-primary { padding: 14px; border-radius: 10px; font-weight: 600; font-size: 15px; border: none; cursor: pointer; text-align: center; background: #4f46e5; color: white; transition: background-color 0.2s, transform 0.1s; }
+.btn-primary:hover { background: #4338ca; transform: translateY(-1px);}
+.btn-secondary { padding: 14px; border-radius: 10px; font-weight: 600; font-size: 15px; border: none; cursor: pointer; text-align: center; background: #f1f5f9; color: #475569; transition: background-color 0.2s; }
+.btn-secondary:hover { background: #e2e8f0; }
+
+.divider { border: 0; border-top: 1px solid #e2e8f0; margin: 0; margin-bottom: 20px;}
+.full-width { width: 100%; }
 </style>
